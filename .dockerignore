@@ -1,0 +1,9 @@
+.git
+.env
+.env.*
+keys/
+.vscode/
+.idea/
+*.log
+bin/
+dist/
