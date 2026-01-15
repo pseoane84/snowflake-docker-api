@@ -7,5 +7,3 @@ services:
       - .env
     volumes:
       - ./keys:/app/keys:ro
-EOF
-
