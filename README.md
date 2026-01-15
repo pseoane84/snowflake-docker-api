@@ -26,3 +26,4 @@ go run ./cmd/api
 
 ## Docker run (after installing Docker):
 docker compose up --build
+curl http://localhost:8080/api/sf/time
