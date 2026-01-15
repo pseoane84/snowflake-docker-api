@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HTMX + Go</title>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  </head>
+  <body>
+    <h1>Hello, world (HTMX + Go)</h1>
+
+    <p>Click the button to fetch Snowflake time (live) and swap HTML in-place:</p>
+
+    <button
+      hx-get="/htmx/time"
+      hx-target="#result"
+      hx-swap="innerHTML"
+    >
+      Get Snowflake time
+    </button>
+
+    <div id="result" style="margin-top: 12px; font-family: monospace;">
+      (click the button)
+    </div>
+  </body>
+</html>

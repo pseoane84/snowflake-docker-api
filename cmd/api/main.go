@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -52,7 +53,7 @@ func (a *App) handleSFContext(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// Endpoint 3: query menu items (requires a table/view name)
+// Endpoint 3: lists tables from INFORMATION_SCHEMA (live query)
 func (a *App) handleSFMenuItems(w http.ResponseWriter, r *http.Request) {
 	limit := parseLimit(r.URL.Query().Get("limit"), 25, 200)
 
@@ -99,20 +100,25 @@ func parseLimit(raw string, def int, max int) int {
 	return n
 }
 
-// allow letters/numbers/underscore/dot only to reduce injection risk for identifiers
-func isSafeIdentifier(s string) bool {
-	for _, ch := range s {
-		switch {
-		case ch >= 'a' && ch <= 'z':
-		case ch >= 'A' && ch <= 'Z':
-		case ch >= '0' && ch <= '9':
-		case ch == '_':
-		case ch == '.':
-		default:
-			return false
-		}
+// HTMX: Home page
+func (a *App) handleHome(w http.ResponseWriter, r *http.Request) {
+	// Serve the static HTML file
+	http.ServeFile(w, r, "web/index.html")
+}
+
+// HTMX: Returns an HTML fragment (not JSON) for swapping into the page
+func (a *App) handleHTMXTime(w http.ResponseWriter, r *http.Request) {
+	var now string
+	err := a.DB.QueryRow("SELECT TO_VARCHAR(CURRENT_TIMESTAMP())").Scan(&now)
+	if err != nil {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(500)
+		fmt.Fprintf(w, "<span style='color:red;'>Error: %s</span>", err.Error())
+		return
 	}
-	return true
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	fmt.Fprintf(w, "<strong>Snowflake time:</strong> %s", now)
 }
 
 func main() {
@@ -135,14 +141,20 @@ func main() {
 	mux.HandleFunc("/api/sf/context", app.handleSFContext)
 	mux.HandleFunc("/api/sf/menu-items", app.handleSFMenuItems)
 
-	// optional root
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	// HTMX demo endpoints
+	mux.HandleFunc("/htmx/time", app.handleHTMXTime)
+	mux.HandleFunc("/", app.handleHome)
+
+	// Optional: JSON index of endpoints (useful for curl)
+	mux.HandleFunc("/api", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, map[string]any{
 			"ok": true,
 			"endpoints": []string{
+				"/",
+				"/htmx/time",
 				"/api/sf/time",
 				"/api/sf/context",
-				"/api/sf/menu-items?brand=Freezing%20Point&limit=10",
+				"/api/sf/menu-items?limit=10",
 			},
 		})
 	})
