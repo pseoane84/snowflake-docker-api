@@ -3,6 +3,8 @@
 .env.*
 !.env.example
 
+keys/
+
 # --- OS junk ---
 .DS_Store
 Thumbs.db
